@@ -72,12 +72,6 @@ async function main() {
                     { title: 'Mobile App (Expo)', value: 'mobile' },
                 ]
             },
-            {
-                type: 'select', name: 'lang', message: 'Language', initial: 0, choices: [
-                    { title: 'TypeScript', value: 'ts' },
-                    { title: 'JavaScript', value: 'js' },
-                ]
-            },
             // Frontend questions (hidden for Backend-Only and Mobile App)
             {
                 type: (prev, values) => (values.arch !== 'backend' && values.arch !== 'mobile' ? 'select' : null), name: 'frontend', message: 'Which frontend framework?', choices: [
@@ -87,6 +81,27 @@ async function main() {
                     { title: 'Angular (Vite)', value: 'angular' },
                     { title: 'Expo (React Native)', value: 'expo' },
                 ], initial: 0
+            },
+            // Expo template (only when building mobile or choosing Expo frontend)
+            {
+                type: (prev, values) => (values.arch === 'mobile' || values.frontend === 'expo' ? 'select' : null),
+                name: 'expoTemplate',
+                message: 'Expo template',
+                choices: [
+                    { title: 'Default - includes tools recommended for most app developers', value: 'default' },
+                    { title: 'Blank', value: 'blank' },
+                    { title: 'Blank (TypeScript)', value: 'blank-typescript' },
+                    { title: 'Navigation (TypeScript)', value: 'tabs' },
+                    { title: 'Blank (Bare)', value: 'bare-minimum' },
+                ],
+                initial: 0,
+            },
+            // Language: ask only for websites (not for mobile/Expo)
+            {
+                type: (prev, values) => ((values.arch === 'mobile' || values.frontend === 'expo') ? null : 'select'), name: 'lang', message: 'Language', initial: 0, choices: [
+                    { title: 'TypeScript', value: 'ts' },
+                    { title: 'JavaScript', value: 'js' },
+                ]
             },
 
             // Backend questions (hidden for Frontend-Only and Mobile App)
@@ -150,6 +165,11 @@ async function main() {
     const targetDir = path.resolve(process.cwd(), argv.dir || '.');
     const projectRoot = path.join(targetDir, answers.name || 'forge-app');
     let ctx = { ...answers, projectRoot, dryRun: !!argv['dry-run'], install: !!argv.install };
+    // If mobile/expo is chosen, don't force a web language; default to ts unless user provided via flags
+    if ((ctx.arch === 'mobile' || ctx.frontend === 'expo') && !argv.lang) {
+        // leave ctx.lang as-is for backend/frontend web; mobile template is chosen via expoTemplate
+        // No change needed; just note we won't ask for lang in prompts when mobile/expo
+    }
 
     // Validate chosen package manager availability and offer to install if missing
     const availability = detectPackageManagerAvailability();

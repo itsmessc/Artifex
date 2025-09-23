@@ -1,52 +1,60 @@
 const path = require('path');
 const fs = require('fs-extra');
 const kleur = require('kleur');
+const spawn = require('cross-spawn');
+
+function run(cmd, args, cwd, dryRun) {
+    if (dryRun) {
+        console.log(kleur.gray(`[dry-run] ${cmd} ${args.join(' ')} (cwd=${cwd})`));
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, args, { stdio: 'inherit', cwd, shell: process.platform === 'win32' });
+        child.on('exit', (code) => code === 0 ? resolve() : reject(new Error(`${cmd} exited with ${code}`)));
+        child.on('error', reject);
+    });
+}
 
 async function generateMobile(ctx) {
     const root = ctx.root || ctx.projectRoot;
-    const appJson = {
-        expo: {
-            name: ctx.name + (ctx.arch === 'fullstack' ? '-mobile' : ''),
-            slug: ctx.name + '-mobile',
-            scheme: 'forge',
-            sdkVersion: '52.0.0'
-        }
-    };
     const isTS = (ctx.lang || 'ts') === 'ts';
-    const pkg = {
-        name: ctx.name + (ctx.arch === 'fullstack' ? '-mobile' : ''),
-        private: true,
-        version: '0.1.0',
-        main: isTS ? 'index.ts' : 'index.js',
-        scripts: {
-            start: 'expo start',
-            android: 'expo run:android',
-            ios: 'expo run:ios'
-        },
-        dependencies: {
-            expo: '^52.0.0',
-            react: '^19.1.1',
-            'react-native': '0.76.3'
-        }
+    const pm = ctx.pkg || 'npm';
+
+    // Use official Expo scaffolder via the chosen package manager
+    // Let the user choose the template from Expo's list; default maps to no --template
+    const chosen = ctx.expoTemplate || (isTS ? 'blank-typescript' : 'blank');
+    const createMap = {
+        npm: ['npm', ['create', 'expo-app@latest', '.', '--', '--template', chosen, '--yes']],
+        pnpm: ['pnpm', ['create', 'expo-app', '.', '--', '--template', chosen, '--yes']],
+        yarn: ['yarn', ['create', 'expo-app', '.', '--template', chosen, '--yes']],
+        bun: ['bunx', ['create-expo-app@latest', '.', '--template', chosen, '--yes']],
     };
-    if (isTS) {
-        pkg.devDependencies = Object.assign({}, pkg.devDependencies || {}, { typescript: '^5.9.2' });
+    const [cmd, args] = createMap[pm] || createMap.npm;
+    // If 'default' is selected, remove the --template pair to let Expo use its recommended default
+    if (chosen === 'default') {
+        const idx = args.indexOf('--template');
+        if (idx !== -1) args.splice(idx, 2);
     }
-    const index = `import { registerRootComponent } from 'expo'\nimport App from './src/App'\nregisterRootComponent(App)\n`;
-    const app = `import { Text, View } from 'react-native'\nexport default function App(){\n  return (<View style={{flex:1, alignItems:'center', justifyContent:'center'}}><Text>ForgeJS + Expo</Text></View>)\n}\n`;
 
     if (ctx.dryRun) {
-        console.log(kleur.gray(`[dry-run] Write mobile files to ${root}`));
+        console.log(kleur.gray(`[dry-run] Scaffold Expo via ${cmd} ${args.join(' ')} in ${root}`));
         return;
     }
-    await fs.outputFile(path.join(root, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
-    await fs.outputFile(path.join(root, 'app.json'), JSON.stringify(appJson, null, 2) + '\n');
-    await fs.outputFile(path.join(root, isTS ? 'index.ts' : 'index.js'), index);
-    await fs.outputFile(path.join(root, 'src', isTS ? 'App.tsx' : 'App.js'), app);
-    if (isTS) {
-        const tsconfig = { compilerOptions: { jsx: 'react-jsx', target: 'ES2020', module: 'ESNext', skipLibCheck: true, strict: true } };
-        await fs.outputFile(path.join(root, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2) + '\n');
-    }
+    await fs.mkdirp(root);
+    await run(cmd, args, root, ctx.dryRun);
+
+    // Optionally adjust the app name/slug after creation
+    try {
+        const appJsonPath = path.join(root, 'app.json');
+        if (await fs.pathExists(appJsonPath)) {
+            const appJson = JSON.parse(await fs.readFile(appJsonPath, 'utf-8'));
+            const name = ctx.name + (ctx.arch === 'fullstack' ? '-mobile' : '');
+            appJson.expo = appJson.expo || {};
+            appJson.expo.name = appJson.expo.name || name;
+            appJson.expo.slug = appJson.expo.slug || name;
+            await fs.outputFile(appJsonPath, JSON.stringify(appJson, null, 2) + '\n');
+        }
+    } catch (_) { /* non-fatal */ }
 }
 
 module.exports = { generateMobile };
