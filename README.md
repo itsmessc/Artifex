@@ -10,7 +10,7 @@ It's the npx create-... command you wish you always had.
   - Architecture: frontend, backend, or full-stack monorepo
   - Frontend: React/Vue/Svelte (via Vite) — Angular/Expo planned
   - Backend: Express or Fastify (TypeScript)
-  - Database: PostgreSQL, MySQL, or MongoDB with Prisma
+  - Database: PostgreSQL, MySQL, or MongoDB with Prisma or Mongoose
   - Styling: CSS, SCSS, SASS (indented), Less, or Tailwind CSS
 - Generates Docker Compose for selected DBs
 - Wires TypeScript, ESLint, and Prettier
