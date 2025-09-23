@@ -7,31 +7,33 @@ const { generateMobile } = require('./generate-mobile');
 
 function rootPkg(ctx) {
     const workspaces = ['apps/*'];
+    const hasWeb = ctx.frontend !== 'expo';
+    const hasMobile = ctx.frontend === 'expo';
     let scripts = {};
     if (ctx.pkg === 'npm') {
         scripts = {
             dev: 'npm-run-all --parallel dev:*',
-            'dev:web': 'npm run -w apps/web dev',
             'dev:api': 'npm run -w apps/api dev',
-            'dev:mobile': 'npm run -w apps/mobile start',
-            build: 'npm run -w apps/web build && npm run -w apps/api build',
         };
+        if (hasWeb) scripts['dev:web'] = 'npm run -w apps/web dev';
+        if (hasMobile) scripts['dev:mobile'] = 'npm run -w apps/mobile start';
+        scripts.build = (hasWeb ? 'npm run -w apps/web build && ' : '') + 'npm run -w apps/api build';
     } else if (ctx.pkg === 'pnpm') {
         scripts = {
             dev: 'pnpm -w --parallel --filter "./apps/*" dev',
             build: 'pnpm -w --parallel --filter ./apps/* build',
             'dev:api': 'pnpm --filter ./apps/api dev',
-            'dev:web': 'pnpm --filter ./apps/web dev',
-            'dev:mobile': 'pnpm --filter ./apps/mobile start',
         };
+        if (hasWeb) scripts['dev:web'] = 'pnpm --filter ./apps/web dev';
+        if (hasMobile) scripts['dev:mobile'] = 'pnpm --filter ./apps/mobile start';
     } else if (ctx.pkg === 'yarn') {
         scripts = {
             dev: 'yarn workspaces run dev',
             build: 'yarn workspaces run build',
             'dev:api': 'yarn workspace api dev',
-            'dev:web': 'yarn workspace web dev',
-            'dev:mobile': 'yarn workspace mobile start',
         };
+        if (hasWeb) scripts['dev:web'] = 'yarn workspace web dev';
+        if (hasMobile) scripts['dev:mobile'] = 'yarn workspace mobile start';
     }
     const pkg = {
         name: ctx.name,

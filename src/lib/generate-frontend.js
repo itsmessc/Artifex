@@ -3,13 +3,14 @@ const fs = require('fs-extra');
 const kleur = require('kleur');
 const spawn = require('cross-spawn');
 
-function run(cmd, args, cwd, dryRun) {
+function run(cmd, args, cwd, dryRun, extraEnv = {}) {
     if (dryRun) {
         console.log(kleur.gray(`[dry-run] ${cmd} ${args.join(' ')} (cwd=${cwd})`));
         return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-        const child = spawn(cmd, args, { stdio: 'inherit', cwd, shell: process.platform === 'win32' });
+        const env = { ...process.env, CI: 'true', ...extraEnv };
+        const child = spawn(cmd, args, { stdio: 'inherit', cwd, shell: process.platform === 'win32', env });
         child.on('exit', (code) => code === 0 ? resolve() : reject(new Error(`${cmd} exited with ${code}`)));
         child.on('error', reject);
     });
