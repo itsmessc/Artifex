@@ -1,6 +1,6 @@
-# ForgeJS
+# Artifex
 
-In 2025, starting a new project shouldn't be a chore. ForgeJS is the universal command-line tool that eliminates hours of tedious setup by asking you simple questions and then building a production-ready, full-stack application tailored to your exact specifications.
+In 2025, starting a new project shouldn't be a chore. Artifex is the universal command-line tool that eliminates hours of tedious setup by asking you simple questions and then building a production-ready, full-stack application tailored to your exact specifications.
 
 It's the npx create-... command you wish you always had.
 
@@ -26,13 +26,13 @@ npm install
 Run the CLI (locally):
 
 ```powershell
-node .\bin\forgejs.js
+node .\bin\Artifex.js
 ```
 
 Or with options:
 
 ```powershell
-node .\bin\forgejs.js --yes --arch fullstack --frontend react --backend express --db postgres --orm prisma --css tailwind --name my-app --pkg npm
+node .\bin\Artifex.js --yes --arch fullstack --frontend react --backend express --db postgres --orm prisma --css tailwind --name my-app --pkg npm
 ```
 
 ## Roadmap

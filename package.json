@@ -1,13 +1,17 @@
 {
-    "name": "forgejs",
-    "version": "0.1.0",
-    "description": "ForgeJS – Interactive CLI to scaffold full-stack JavaScript/TypeScript apps fast.",
+    "name": "artifex",
+    "version": "1.0.2",
+    "description": "Artifex – Interactive CLI to scaffold full-stack JavaScript/TypeScript apps fast.",
     "bin": {
-        "forgejs": "bin/forgejs.js"
+        "artifex": "bin/artifex.js"
     },
     "type": "commonjs",
+    "files": [
+        "bin",
+        "src"
+    ],
     "license": "MIT",
-    "author": "",
+    "author": "Sai Charan Sanganwar",
     "repository": {
         "type": "git",
         "url": ""
@@ -18,9 +22,17 @@
         "full-stack",
         "react",
         "express",
+        "nodejs",
+        "typescript",
+        "javascript",
+        "fastify",
+        "expo",
         "vite",
         "prisma",
-        "docker-compose"
+        "docker-compose",
+        "mongodb",
+        "postgresql",
+        "tailwindcss"
     ],
     "scripts": {
         "start": "node src/index.js",
