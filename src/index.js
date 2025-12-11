@@ -85,8 +85,8 @@ async function main() {
             },
             {
                 type: 'select', name: 'pkg', message: 'Package manager', choices: [
-                    { title: 'pnpm (recommended for monorepos)', value: 'pnpm' },
                     { title: 'npm', value: 'npm' },
+                    { title: 'pnpm (recommended for monorepos)', value: 'pnpm' },
                     { title: 'yarn', value: 'yarn' },
                     { title: 'bun', value: 'bun' },
                 ], initial: 0
@@ -313,7 +313,7 @@ async function main() {
         await installDependencies(installPath, ctx.pkg, ctx.dryRun);
     }
 
-    console.log(kleur.green(`\nDone. Next: \n - cd ${path.relative(process.cwd(), projectRoot) || '.'}\n - Open README for commands.\n`));
+    console.log(kleur.green(`\nDone. Next: \n - cd ${path.relative(process.cwd(), projectRoot) || '.'}\n - Open README for commands.\n - To start development, npm run dev\n - Thank you for using Artifex!\n - Happy coding!\n `));
 }
 
 main().catch((err) => {

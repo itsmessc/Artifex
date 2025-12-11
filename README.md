@@ -17,6 +17,12 @@ It's the npx create-... command you wish you always had.
 
 ## Quick start
 
+To use the package directly, run:
+
+```powershell
+npx artifex@latest
+```
+
 Install dependencies for the CLI:
 
 ```powershell

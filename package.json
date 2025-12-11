@@ -1,6 +1,6 @@
 {
     "name": "artifex",
-    "version": "1.0.2",
+    "version": "1.0.9",
     "description": "Artifex – Interactive CLI to scaffold full-stack JavaScript/TypeScript apps fast.",
     "bin": {
         "artifex": "bin/artifex.js"
@@ -21,6 +21,7 @@
         "scaffold",
         "full-stack",
         "react",
+        "react-native",
         "express",
         "nodejs",
         "typescript",
