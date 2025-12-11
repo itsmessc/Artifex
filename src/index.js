@@ -17,7 +17,7 @@ const { detectPackageManagerAvailability, installPackageManager, resolvePackageM
 function assertNodeVersion() {
     const min = '16.14.0';
     if (!semver.gte(process.version, min)) {
-        console.error(kleur.red(`ForgeJS requires Node ${min}+; current ${process.version}`));
+        console.error(kleur.red(`Artifex requires Node ${min}+; current ${process.version}`));
         process.exit(1);
     }
 }
@@ -25,7 +25,7 @@ function assertNodeVersion() {
 async function main() {
     assertNodeVersion();
     const argv = yargs(hideBin(process.argv))
-        .scriptName('forgejs')
+        .scriptName('Artifex')
         .usage('$0 [name] [options]')
         .positional('name', { describe: 'Project name', type: 'string' })
         .option('yes', { alias: 'y', type: 'boolean', desc: 'Skip prompts and use defaults' })
@@ -33,10 +33,10 @@ async function main() {
         .option('name', { type: 'string', desc: 'Project name (overrides positional)' })
         .option('arch', { type: 'string', choices: ['frontend', 'backend', 'fullstack', 'mobile'], desc: 'Architecture' })
         .option('frontend', { type: 'string', choices: ['react', 'vue', 'svelte', 'angular', 'expo'], desc: 'Frontend framework' })
+        .option('css', { type: 'string', choices: ['css', 'scss', 'sass', 'less', 'tailwind'], default: 'css', desc: 'CSS styling' })
         .option('backend', { type: 'string', choices: ['express', 'fastify'], desc: 'Backend framework' })
         .option('db', { type: 'string', choices: ['none', 'postgres', 'mysql', 'mongodb'], default: 'none', desc: 'Database type' })
         .option('orm', { type: 'string', choices: ['none', 'prisma', 'mongoose'], default: 'prisma', desc: 'ORM/ODM choice' })
-        .option('css', { type: 'string', choices: ['css', 'scss', 'sass', 'less', 'tailwind'], default: 'css', desc: 'CSS styling' })
         .option('pkg', { type: 'string', choices: ['npm', 'pnpm', 'yarn', 'bun'], default: 'npm', desc: 'Package manager' })
         .option('lang', { type: 'string', choices: ['ts', 'js'], default: 'ts', desc: 'Language for generated code' })
         .option('dry-run', { type: 'boolean', desc: 'Print actions without writing files' })
@@ -59,7 +59,7 @@ async function main() {
     };
 
     let answers = { ...defaults, ...argv };
-    answers.name = argv.name || argv._[0] || 'forge-app';
+    answers.name = argv.name || argv._[0] || 'artifex';
 
     if (!argv.yes) {
         const res = await prompts([
@@ -95,6 +95,16 @@ async function main() {
                     { title: 'Blank (Bare)', value: 'bare-minimum' },
                 ],
                 initial: 0,
+            },
+            // Styling and package manager
+            {
+                type: (prev, values) => (values.arch !== 'backend' && values.frontend !== 'expo' && values.arch !== 'mobile' ? 'select' : null), name: 'css', message: 'Styling', choices: [
+                    { title: 'Plain CSS', value: 'css' },
+                    { title: 'SCSS', value: 'scss' },
+                    { title: 'SASS (indented)', value: 'sass' },
+                    { title: 'Less', value: 'less' },
+                    { title: 'Tailwind CSS', value: 'tailwind' },
+                ], initial: 4
             },
             // Language: ask only for websites (not for mobile/Expo)
             {
@@ -135,16 +145,7 @@ async function main() {
                     ],
                 initial: 0
             },
-            // Styling and package manager
-            {
-                type: (prev, values) => (values.arch !== 'backend' && values.frontend !== 'expo' && values.arch !== 'mobile' ? 'select' : null), name: 'css', message: 'Styling', choices: [
-                    { title: 'Plain CSS', value: 'css' },
-                    { title: 'SCSS', value: 'scss' },
-                    { title: 'SASS (indented)', value: 'sass' },
-                    { title: 'Less', value: 'less' },
-                    { title: 'Tailwind CSS', value: 'tailwind' },
-                ], initial: 4
-            },
+
             {
                 type: 'select', name: 'pkg', message: 'Package manager', choices: [
                     { title: 'pnpm (recommended for monorepos)', value: 'pnpm' },
@@ -163,7 +164,7 @@ async function main() {
     }
 
     const targetDir = path.resolve(process.cwd(), argv.dir || '.');
-    const projectRoot = path.join(targetDir, answers.name || 'forge-app');
+    const projectRoot = path.join(targetDir, answers.name || 'artifex-app');
     let ctx = { ...answers, projectRoot, dryRun: !!argv['dry-run'], install: !!argv.install };
     // If mobile/expo is chosen, don't force a web language; default to ts unless user provided via flags
     if ((ctx.arch === 'mobile' || ctx.frontend === 'expo') && !argv.lang) {
@@ -257,7 +258,7 @@ async function main() {
         }
     }
 
-    console.log(kleur.cyan(`\nForgeJS will create: ${kleur.bold(answers.arch)} in ${projectRoot}\n`));
+    console.log(kleur.cyan(`\nArtifex will create: ${kleur.bold(answers.arch)} in ${projectRoot}\n`));
 
     if (ctx.dryRun) console.log(kleur.yellow('[dry-run] No files will be written.'));
 

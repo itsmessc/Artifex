@@ -38,7 +38,7 @@ async function installDependencies(cwd, pkgManager, dryRun) {
             kleur.yellow(`If you are on Windows and using PowerShell:
  - Close and reopen your terminal after installing Node/pm to refresh PATH.
  - Confirm the package manager is installed: npm -v | pnpm -v | yarn -v
- - You can also re-run ForgeJS with --install false and install manually inside the generated folder.`)
+ - You can also re-run Artifex with --install false and install manually inside the generated folder.`)
         );
         throw err;
     }
