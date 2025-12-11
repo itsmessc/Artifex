@@ -1,5 +1,16 @@
 const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const os = require('os');
+
+function prependToPath(dir) {
+    if (!dir) return;
+    const current = process.env.PATH || '';
+    const segments = current.split(path.delimiter).filter(Boolean);
+    if (!segments.includes(dir)) {
+        process.env.PATH = [dir, ...segments].join(path.delimiter);
+    }
+}
 
 function which(cmd) {
     const isWin = process.platform === 'win32';
@@ -38,10 +49,10 @@ async function installPackageManager(pm, dryRun = false) {
     // Non-intrusive, best-effort installers. We prefer corepack for yarn/pnpm.
     // On Windows, we use PowerShell-friendly commands.
     const isWin = process.platform === 'win32';
-    const run = (command, args = []) => {
+    const run = (command, args = [], options = {}) => {
         if (dryRun) return 0;
-        const result = spawnSync(command, args, { stdio: 'inherit', shell: true });
-        return result.status || 0;
+        const result = spawnSync(command, args, { stdio: 'inherit', shell: options.shell ?? isWin });
+        return typeof result.status === 'number' ? result.status : 1;
     };
 
     if (pm === 'pnpm') {
@@ -67,11 +78,27 @@ async function installPackageManager(pm, dryRun = false) {
         return s3 === 0;
     }
     if (pm === 'bun') {
-        // Bun official install requires a shell script; on Windows it needs WSL or MSI.
-        // We avoid auto-install on Windows; ask the user to install manually.
-        if (isWin) return false;
-        const s1 = run('curl', ['-fsSL', 'https://bun.sh/install', '|', 'bash']);
-        return s1 === 0;
+        if (isWin) {
+            const installCmd = 'Invoke-WebRequest -UseBasicParsing https://bun.sh/install.ps1 | Invoke-Expression';
+            const status = run('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', installCmd], { shell: false });
+            if (status === 0) {
+                const bunDir = path.join(os.homedir(), '.bun', 'bin');
+                if (fs.existsSync(path.join(bunDir, 'bun.exe'))) {
+                    prependToPath(bunDir);
+                }
+                return true;
+            }
+            return false;
+        }
+        const status = run('bash', ['-c', 'curl -fsSL https://bun.sh/install | bash'], { shell: false });
+        if (status === 0) {
+            const bunDir = path.join(os.homedir(), '.bun', 'bin');
+            if (fs.existsSync(path.join(bunDir, 'bun'))) {
+                prependToPath(bunDir);
+            }
+            return true;
+        }
+        return false;
     }
     // npm comes with Node; nothing to install here.
     return true;

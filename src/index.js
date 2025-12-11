@@ -59,11 +59,22 @@ async function main() {
     };
 
     let answers = { ...defaults, ...argv };
-    answers.name = argv.name || argv._[0] || 'artifex';
+    answers.name = argv.name || argv._[0] || '';
+
+    if (argv.yes && !answers.name) {
+        answers.name = 'artifex';
+    }
 
     if (!argv.yes) {
         const res = await prompts([
-            { type: 'text', name: 'name', message: 'Project name', initial: answers.name },
+            {
+                type: 'text',
+                name: 'name',
+                message: 'Project name',
+                initial: answers.name || '',
+                validate: (value) => value && value.trim().length > 0 ? true : 'Please enter a project name.',
+                format: (value) => value.trim(),
+            },
             {
                 type: 'select', name: 'arch', message: 'What type of project are you building?', initial: 0, choices: [
                     { title: 'Full-Stack Application', value: 'fullstack' },
@@ -71,6 +82,14 @@ async function main() {
                     { title: 'Backend-Only', value: 'backend' },
                     { title: 'Mobile App (Expo)', value: 'mobile' },
                 ]
+            },
+            {
+                type: 'select', name: 'pkg', message: 'Package manager', choices: [
+                    { title: 'pnpm (recommended for monorepos)', value: 'pnpm' },
+                    { title: 'npm', value: 'npm' },
+                    { title: 'yarn', value: 'yarn' },
+                    { title: 'bun', value: 'bun' },
+                ], initial: 0
             },
             // Frontend questions (hidden for Backend-Only and Mobile App)
             {
@@ -96,7 +115,14 @@ async function main() {
                 ],
                 initial: 0,
             },
-            // Styling and package manager
+            // Language: ask only for websites (not for mobile/Expo)
+            {
+                type: (prev, values) => ((values.arch === 'mobile' || values.frontend === 'expo') ? null : 'select'), name: 'lang', message: 'Language', initial: 0, choices: [
+                    { title: 'TypeScript', value: 'ts' },
+                    { title: 'JavaScript', value: 'js' },
+                ]
+            },
+            // Styling (skip for backend-only and Expo-focused flows)
             {
                 type: (prev, values) => (values.arch !== 'backend' && values.frontend !== 'expo' && values.arch !== 'mobile' ? 'select' : null), name: 'css', message: 'Styling', choices: [
                     { title: 'Plain CSS', value: 'css' },
@@ -105,13 +131,6 @@ async function main() {
                     { title: 'Less', value: 'less' },
                     { title: 'Tailwind CSS', value: 'tailwind' },
                 ], initial: 4
-            },
-            // Language: ask only for websites (not for mobile/Expo)
-            {
-                type: (prev, values) => ((values.arch === 'mobile' || values.frontend === 'expo') ? null : 'select'), name: 'lang', message: 'Language', initial: 0, choices: [
-                    { title: 'TypeScript', value: 'ts' },
-                    { title: 'JavaScript', value: 'js' },
-                ]
             },
 
             // Backend questions (hidden for Frontend-Only and Mobile App)
@@ -146,14 +165,6 @@ async function main() {
                 initial: 0
             },
 
-            {
-                type: 'select', name: 'pkg', message: 'Package manager', choices: [
-                    { title: 'pnpm (recommended for monorepos)', value: 'pnpm' },
-                    { title: 'npm', value: 'npm' },
-                    { title: 'yarn', value: 'yarn' },
-                    { title: 'bun', value: 'bun' },
-                ], initial: 0
-            },
         ], {
             onCancel: () => {
                 console.log(kleur.yellow('Aborted.'));
@@ -161,6 +172,9 @@ async function main() {
             }
         });
         answers = { ...answers, ...res };
+        if (answers.name) {
+            answers.name = answers.name.trim();
+        }
     }
 
     const targetDir = path.resolve(process.cwd(), argv.dir || '.');

@@ -122,11 +122,12 @@ async function generateFrontend(ctx) {
         svelte: isTS ? 'svelte-ts' : 'svelte',
     };
     const template = templateMap[framework] || templateMap.react;
+    const createArgs = ['--', '--template', template, '--no-rolldown', '--no-interactive'];
     const createMap = {
-        npm: ['npm', ['create', 'vite@latest', '.', '--', '--template', template]],
-        pnpm: ['pnpm', ['create', 'vite', '.', '--', '--template', template]],
-        yarn: ['yarn', ['create', 'vite', '.', '--', '--template', template]],
-        bun: ['bunx', ['create-vite@latest', '.', '--template', template]],
+        npm: ['npm', ['create', 'vite@latest', '.', ...createArgs]],
+        pnpm: ['pnpm', ['create', 'vite', '.', ...createArgs]],
+        yarn: ['yarn', ['create', 'vite', '.', ...createArgs]],
+        bun: ['bunx', ['create-vite@latest', '.', ...createArgs]],
     };
     const [cmd, args] = createMap[pm] || createMap.npm;
 
