@@ -1,6 +1,6 @@
 {
     "name": "artifex",
-    "version": "1.0.9",
+    "version": "1.1.0",
     "description": "Artifex – Interactive CLI to scaffold full-stack JavaScript/TypeScript apps fast.",
     "bin": {
         "artifex": "bin/artifex.js"
@@ -14,7 +14,7 @@
     "author": "Sai Charan Sanganwar",
     "repository": {
         "type": "git",
-        "url": ""
+        "url": "https://github.com/itsmessc/Artifex"
     },
     "keywords": [
         "cli",
